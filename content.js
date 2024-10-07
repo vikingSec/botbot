@@ -2,6 +2,17 @@
 //
   // Get information about the current page
 //
+// wait time for timeouts (default 15 minutes)
+let wait_time = 15 * 60 * 1000
+function checkRegex(username) {
+  let regex = /\w+_?\d{6,}/;
+  let res = regex.exec(username);
+  if(res){
+    return true 
+  }
+  return false
+
+}
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.action === "blockUser") {
     blockUser()
@@ -10,55 +21,43 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     return true;  // Indicates that the response is sent asynchronously
   }else if (request.action === "checkPage") {
     let isFollowersPage = window.location.href.includes("/followers") || window.location.href.includes("/verified_followers");
-    console.log("Is followers page:", isFollowersPage);
     sendResponse({isFollowersPage: isFollowersPage});
   } else if (request.action === "purgeHeretics") {
+    let terms = await chrome.runtime.sendMessage({action: 'getTerms'});
+    let ratio = await chrome.runtime.sendMessage({action: 'getTargetRatio'});
+    terms = terms.terms;  
+    let target_follower_ratio = ratio.ratio;
+    console.log('Terms: ',terms);
     console.log("Purging heretics...");
     // Your purging logic here
     console.log("BLOOD FOR THE BLOOD GOD");
 
     let links = {}; 
-    let sketchy_users = {};
     let enriched_info = {}
     await scrollUntilEnd();
-    for(const [username, data] of Object.entries(links)) {
-      let regex = /\w+_?\d{6,}/;
-      let res = regex.exec(username);
-      if(res){
-        sketchy_users[username] = {link: data.link, desc: data.desc};
-      }
-    }
-    let keys = Object.keys(links)
-    const requests = keys.map((k) => {
-      console.log("K: ",k);
-      makeApiCall(k).then(res => {
-        if(res.success){
-          let js = res.data;
-          console.log("JS: ",res.data);
-          return {key: k,
-            tweets : js.tweets,
-            followers: js.followers,
-            following: js.following,
-            joined: js.joined,
-            avatar_url: js.avatar_url
-          }
-        }else{
-          return {key: k, error: "ERROR"}
+    
+    let usernames = Object.keys(links);
+    let keep_checking = true;
+    let checks = 0;
+    while(keep_checking) {
+      let res = await makeApiCall(usernames);
+      if(res.success) {
+        let data = res.data;
+        let processing = data.filter((item) => item.status && item.status.includes("processing"))
+        let completed = data.filter((item) => item.status && item.status.includes("completed"))
+      
+        completed.forEach((item) => {
+          enriched_info[item.username] = item;
+          usernames = usernames.filter((user) => user !== item.username );
+        })
+        if(checks >= 25 || usernames.length === 0 || processing.length === 0) {
+          keep_checking = false;
         }
+        checks+=1;
 
-      })
-    });
-    let batch_size = 10;
-    let batch_wait = 2000;
-    for(var i = 0; i < requests.length; i+=batch_size) {
-      const batch = results.slice(i, i+batch_size);
-      const results = Promise.all(batch);
-      results.forEach((res) => {
-        if(res.data) {
-          enriched_info[res.data.key] = res.data;
-        }
-      })
-      await new Promise(resolve => setTimeout(resolve, batch_wait));
+      }
+
+
     }
      
     let banned = {}
@@ -75,12 +74,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
         follower_ratio = ei.following / ei.followers;
       }
-      if(Object.keys(sketchy_users).includes(username) || ei.tweets <= 5 ){
+      if(checkRegex(username)  || ei.tweets <= 5 || (follower_ratio !== -1 && follower_ratio <= target_follower_ratio) ){
         console.log("Bannable: ",username);
         banned[username] = ei;
       }
     }
-    console.log(`Bannable users (${Object.keys(banned).length}) : `,banned);
     let banned_keys = Object.keys(banned);
     for(var i = 0; i < banned_keys.length; i++) {
       chrome.runtime.sendMessage({action: "startBlocking", username: banned_keys[i]}, function(response) {
@@ -194,10 +192,9 @@ function sendMessageToBackground(message) {
     });
   });
 }
-async function makeApiCall(username) {
-  console.log("MakeAPICall: ",username);
+async function makeApiCall(usernames) {
+  console.log("MakeAPICall: ",usernames);
   try {
-    console.log("Calling with username ", username);
     const response = await sendMessageToBackground({
       action: "makeApiCall",
       url: "https://crackedeng.com/botbot/api/get_user",
@@ -209,7 +206,7 @@ async function makeApiCall(username) {
         },
         // Add body if it's a POST request
         // body: JSON.stringify(data)
-        body: {username: username}
+        body: {usernames: usernames}
       }
     });
 

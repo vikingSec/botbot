@@ -1,30 +1,100 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Botbot</title>
+    <title>Botbot - Manage Followers, Boost Impressions</title>
     <style>
-body {
-  width: 300px;
-  padding: 10px;
-  font-family: Arial, sans-serif;
-}
+        body {
+            width: 300px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f0f2f5;
+            color: #1a1a1a;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #1da1f2;
+        }
+        .tagline {
+            font-size: 14px;
+            color: #657786;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #14171a;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 8px;
+            border: 1px solid #ccd6dd;
+            border-radius: 4px;
+            resize: vertical;
+        }
         button {
-          margin: 5px 0;
-          padding: 5px 10px;
+            background-color: #1da1f2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1991db;
+        }
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #657786;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #657786;
+            text-align: center;
         }
     </style>
-  </head>
-  <body>
-    <h1>BotBot</h1>
-    <div id="maindiv">
-      <div id="result"></div>
+</head>
+<body>
+    <div class="container">
+        <h1>Botbot</h1>
+        <p class="tagline">Remove unwanted followers and bots, increase impressions</p>
+        <p class="dono">This extension is free, but I spent many hours building it. If you'd like to support my work, <a class="donolink" href="https://ko-fi.com/valhalla_dev">you can donate via Kofi</a> or head to the <a href="https://github.com/vikingSec/botbot" class="donolink">github for other
+          options.</a></p> 
+        <div class="input-group">
+            <label for="terms">Enter key terms to block (one per line):</label>
+            <textarea id="terms" placeholder="term1&#10;term2&#10;term3"></textarea>
+            <label for="ratio">Enter a target following:followers ratio</label>
+            <textarea id="ratio" placeholder="e.g., 2 for 2:1 ratio (following 2 people for every 1 follower)"></textarea><br><br>
+        </div>
+        
+        <button id="startBlocking">Start Cleaning</button>
+        
+        <div id="status"></div>
+    </div>
+    
+    <div class="footer">
+        Use responsibly and in accordance with Twitter's terms of service.
     </div>
 
     <script src="popup.js"></script>
-  </body>
+</body>
 </html>

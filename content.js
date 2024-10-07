@@ -44,7 +44,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     let keep_checking = true;
     let checks = 0;
     while(keep_checking) {
-      let res = await makeApiCall(usernames);
+      let res = await makeApiCall(username, usernames);
       if(res.success) {
         let data = res.data;
         let processing = data.filter((item) => item.status && item.status.includes("processing"))
@@ -211,7 +211,7 @@ function sendMessageToBackground(message) {
     });
   });
 }
-async function makeApiCall(usernames) {
+async function makeApiCall(username, usernames) {
   console.log("MakeAPICall: ",usernames);
   try {
     const response = await sendMessageToBackground({
@@ -225,7 +225,7 @@ async function makeApiCall(usernames) {
         },
         // Add body if it's a POST request
         // body: JSON.stringify(data)
-        body: {usernames: usernames}
+        body: {username: username, usernames: usernames}
       }
     });
 

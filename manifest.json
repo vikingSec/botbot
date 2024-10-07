@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "BotBot",
+  "version": "1.0",
+  "description": "Purge bot followers and increase engagement",
+  "permissions": ["activeTab", "scripting", "tabs"],
+  "host_permissions": ["https://*.twitter.com/*", "https://*.x.com/*", "https://crackedeng.com/*"],
+  "action": {
+    "default_popup": "main.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.twitter.com/*", "https://*.x.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

@@ -2,10 +2,10 @@
 //
   // Get information about the current page
 //
-// wait time for timeouts (default 15 minutes)
-let wait_time = 15 * 60 * 1000
+// wait time for timeouts (default 20 minutes)
+let wait_time = 20 * 60 * 1000
 function checkRegex(username) {
-  let regex = /\w+_?\d{6,}/;
+  let regex = /\w{4,}_?\d{6,}/;
   let res = regex.exec(username);
   if(res){
     return true 
@@ -25,7 +25,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   } else if (request.action === "purgeHeretics") {
     let terms = await chrome.runtime.sendMessage({action: 'getTerms'});
     let ratio = await chrome.runtime.sendMessage({action: 'getTargetRatio'});
-    terms = terms.terms;  
+    let username = getUsername(); 
+    console.log("Username: ",username);
+    let whitelist = await chrome.runtime.sendMessage({action: 'getWhitelist'});
+    whitelist = whitelist.whitelist;  
+    terms = terms.terms;
     let target_follower_ratio = ratio.ratio;
     console.log('Terms: ',terms);
     console.log("Purging heretics...");
@@ -36,7 +40,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     let enriched_info = {}
     await scrollUntilEnd();
     
-    let usernames = Object.keys(links);
+    let usernames = Object.keys(links).filter((username) => !whitelist.includes(username));
     let keep_checking = true;
     let checks = 0;
     while(keep_checking) {
@@ -61,12 +65,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
      
     let banned = {}
-    for(var i = 0; i < keys.length; i++) {
-      let key = keys[i];
-      let username = key;
+    console.log("Enriched info: ",enriched_info);
+    console.log("Usernames left to process: ",usernames);
+
+    for(const [username, ei] of Object.entries(enriched_info)) {
 
       console.log("Checking ", username);
-      let ei = enriched_info[username];
       let follower_ratio = 0;
       if(ei.followers === 0) {
         follower_ratio = ei.following;
@@ -74,20 +78,35 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
         follower_ratio = ei.following / ei.followers;
       }
-      if(checkRegex(username)  || ei.tweets <= 5 || (follower_ratio !== -1 && follower_ratio <= target_follower_ratio) ){
+      if(ei.following === 0) {
+        follower_ratio = 0;
+      }
+      console.log(`${username} has a follower ratio of ${follower_ratio} comparedt to a target of ${target_follower_ratio}`)
+      if(checkRegex(username)  || ei.tweets <= 5 || (follower_ratio !== -1 && follower_ratio <= target_follower_ratio) || ei.followers === 0){
         console.log("Bannable: ",username);
         banned[username] = ei;
+      }else{
+        terms.forEach((term) => {
+          if(username.includes(term) || ei.description.includes(term) || ei.screen_name.includes(term)){
+            console.log("Bannable: ",username);
+            banned[username] = ei;
+          }
+        })
       }
     }
-    let banned_keys = Object.keys(banned);
-    for(var i = 0; i < banned_keys.length; i++) {
-      chrome.runtime.sendMessage({action: "startBlocking", username: banned_keys[i]}, function(response) {
-        //document.getElementById('status').textContent = 'Blocking process started. You can close this popup.';
-      });
+    let banned_users = Object.keys(banned);
+    console.log(`Blockable users (${banned_users.length}): `,banned_users);
+    for(var i = 0; i < banned_users.length; i++) {
+      chrome.runtime.sendMessage({action: "startBlocking", username: banned_users[i]});
 
       await new Promise(resolve => setTimeout(resolve, 15000)); 
     }
-    
+    function getUsername() {
+      let a_href_spl = document.querySelector('[aria-label="Profile"]').href.split("/");
+      let a_href = a_href_spl[a_href_spl.length-1];
+      console.log("Username: ",a_href);
+      return a_href;
+    } 
     async function smoothScrollToBottom() {
       return new Promise((resolve) => {
         let lastScrollTop = document.documentElement.scrollTop;
@@ -111,7 +130,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               }        
             });
           });
-
+          
           if (document.documentElement.scrollTop === lastScrollTop) {
             clearInterval(scrollInterval);
             console.log("Reached the bottom or can't scroll further.");
@@ -149,13 +168,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 async function blockUser() {
   // Find and click the block button
   const moreElipses = await waitForElement('[aria-label="More"]');
-  moreElipses.click();
+  await moreElipses.click();
   const blockButton = await waitForElement('[data-testid="block"]');
-  blockButton.click();
+  await blockButton.click();
 
   // Wait for the confirmation modal and click the confirm button
   const confirmButton = await waitForElement('[data-testid="confirmationSheetConfirm"]');
-  confirmButton.click();
+  await confirmButton.click();
 
   // Wait a bit to ensure the blocking action is completed
 
@@ -197,7 +216,7 @@ async function makeApiCall(usernames) {
   try {
     const response = await sendMessageToBackground({
       action: "makeApiCall",
-      url: "https://crackedeng.com/botbot/api/get_user",
+      url: "https://crackedeng.com/botbot/api/get_users",
       options: {
         method: 'POST', // or 'POST', etc.
         headers: {

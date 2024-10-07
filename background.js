@@ -28,10 +28,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           if (response && response.status === "blocked") {
             console.log(`Blocked user: ${username}`);
 
-            chrome.tabs.remove(tab.id);
           } else {
             console.log(`Failed to block user: ${username}`);
-            chrome.tabs.remove(tab.id);
           }
           
         });

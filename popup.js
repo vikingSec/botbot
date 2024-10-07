@@ -29,6 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
       } 
       sendResponse({ratio: parsed});
       return true;
+    }else if (request.action === "getWhitelist") {
+      let textfield = document.getElementById("whitelist");
+      let termsText = textfield.value;
+      let ret = termsText.split('\n').filter(t => t.trim() !== '');
+      sendResponse({whitelist: ret});
+      return true;
     }
   });
   

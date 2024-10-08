@@ -5,11 +5,14 @@
 This extension is free and is 80% open source (backend will be open source soon) and honestly I put a fair bit of work into building it. Donations are not required, will not be begged for but are very much appreciated.
 
 KoFi - https://ko-fi.com/valhalla_dev
+
 ETH - 0xC0552927B2AC2030b417F1Bf34bC9D70883BEd63
+
 XMR - 46gFnNFJ4SjBi9VjBcsygu5UaS4AGSZazVK71GzxxBk2E1MNH34xt5Z5aCLKYSQPNZAxjvTKtyBbeKmHqb4bfS5jNKJEPvV
 
 ## Usage 
 (requires a Chromium-based browser like Google Chrome and Arc)
+
 To install, pull the repo with Git, or [download the zip](https://github.com/vikingSec/botbot/archive/refs/heads/main.zip).
 
 Now follow these instructions to point your browser at the extension.

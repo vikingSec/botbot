@@ -42,6 +42,8 @@ information with the number of people that follow that user, their bio, their sc
 You are likely going to have to run this extension several times, especially if you have a large number of followers. This is because Twitter will inevitably rate limit the extension. There are ways I could avoid this... but it would only mean making the extension run even slower. On that note, the
 extension is very slow. I would open up a new window to run the extension overnight.
 
+I'm not going to be super active in building on this project more, but if you have additions or fixes you want to make, open a PR and I'll check them out. I'm planning on open-sourcing the backend as well as soon as I fix it up
+
 ## Paid version (zeusinsight)
 There's a user on twitter ([@zeusinsight](https://x.com/zeusinsight)) who runs [XBlockBot](https://xblockbot.com/).
 

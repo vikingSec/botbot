@@ -3,7 +3,6 @@
   // Get information about the current page
 //
 // wait time for timeouts (default 20 minutes)
-let wait_time = 20 * 60 * 1000
 function checkRegex(username) {
   let regex = /\w{4,}_?\d{6,}/;
   let res = regex.exec(username);
